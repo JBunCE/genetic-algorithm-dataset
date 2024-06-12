@@ -4,6 +4,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import pandastable as pt
 import customtkinter as ctk
 import matplotlib.pyplot as plt
 from tkinter import PhotoImage
@@ -36,6 +37,9 @@ class GeneticAlgorithm(ctk.CTk):
 
         self.chart_frame = ctk.CTkFrame(self)
         self.chart_frame.pack(side="right", ipadx=10, ipady=10, fill="both", expand=True, padx=10, pady=10)
+        
+        self.table_frame = ctk.CTkFrame(self)
+        self.table_frame.pack(side="right", ipadx=10, ipady=10, fill="both", padx=10, pady=10)
 
         self.canvas = ctk.CTkCanvas(self.chart_frame, bg="black")
         self.canvas.pack(expand=True, fill="both")
@@ -208,6 +212,13 @@ class GeneticAlgorithm(ctk.CTk):
         self.worst_members.append(self.population[-1])
 
     def make_video(self):
+        best_member = pd.DataFrame({
+            "A": [m["chromosome"] for m in self.best_members],
+            "fitness_err": [m["fitness_err"] for m in self.best_members],
+        })
+        
+        pt.Table(self.table_frame, dataframe=best_member).show()
+
         fig_pop_ev = plt.figure(figsize=(10, 10))
         self.ax_pop_ev = fig_pop_ev.add_subplot(111)
 

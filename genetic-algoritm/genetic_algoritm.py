@@ -44,33 +44,46 @@ class GeneticAlgorithm(ctk.CTk):
         self.canvas = ctk.CTkCanvas(self.chart_frame, bg="black")
         self.canvas.pack(expand=True, fill="both")
 
+        ctk.CTkLabel(self.options_frame, text="Initial Population").pack(pady=(10, 0))
         self.entry_initial_population = ctk.CTkEntry(self.options_frame)
         self.entry_initial_population.insert(0, "20")  # Valor inicial
-        self.entry_initial_population.pack(pady=10)
+        self.entry_initial_population.pack(pady=(0, 10))
 
+        # Para entry_population_size
+        ctk.CTkLabel(self.options_frame, text="Population Size").pack(pady=(10, 0))
         self.entry_population_size = ctk.CTkEntry(self.options_frame)
         self.entry_population_size.insert(0, "50")  # Valor inicial
-        self.entry_population_size.pack(pady=10)
+        self.entry_population_size.pack(pady=(0, 10))
 
+        # Para entry_percent_of_elitism
+        ctk.CTkLabel(self.options_frame, text="Percent of Elitism").pack(pady=(10, 0))
         self.entry_percent_of_elitism = ctk.CTkEntry(self.options_frame)
         self.entry_percent_of_elitism.insert(0, "40")  # Valor inicial
-        self.entry_percent_of_elitism.pack(pady=10)
+        self.entry_percent_of_elitism.pack(pady=(0, 10))
 
+        # Para entry_mutation_rate
+        ctk.CTkLabel(self.options_frame, text="Mutation Rate").pack(pady=(10, 0))
         self.entry_mutation_rate = ctk.CTkEntry(self.options_frame)
         self.entry_mutation_rate.insert(0, "70")  # Valor inicial
-        self.entry_mutation_rate.pack(pady=10)
+        self.entry_mutation_rate.pack(pady=(0, 10))
 
+        # Para entry_mutation_rate_gen
+        ctk.CTkLabel(self.options_frame, text="Mutation Rate Gen").pack(pady=(10, 0))
         self.entry_mutation_rate_gen = ctk.CTkEntry(self.options_frame)
         self.entry_mutation_rate_gen.insert(0, "70")  # Valor inicial
-        self.entry_mutation_rate_gen.pack(pady=10)
+        self.entry_mutation_rate_gen.pack(pady=(0, 10))
 
+        # Para entry_breakpoint_line
+        ctk.CTkLabel(self.options_frame, text="Breakpoint Line").pack(pady=(10, 0))
         self.entry_breakpoint_line = ctk.CTkEntry(self.options_frame)
         self.entry_breakpoint_line.insert(0, "0")  # Valor inicial
-        self.entry_breakpoint_line.pack(pady=10)
+        self.entry_breakpoint_line.pack(pady=(0, 10))
 
+        # Para entry_number_of_generations
+        ctk.CTkLabel(self.options_frame, text="Number of Generations").pack(pady=(10, 0))
         self.entry_number_of_generations = ctk.CTkEntry(self.options_frame)
         self.entry_number_of_generations.insert(0, "30")  # Valor inicial
-        self.entry_number_of_generations.pack(pady=10)
+        self.entry_number_of_generations.pack(pady=(0, 10))
 
         self.start_button = ctk.CTkButton(self.options_frame, text="Start", command=lambda: self.run())
         self.start_button.pack(pady=20)
@@ -88,7 +101,9 @@ class GeneticAlgorithm(ctk.CTk):
         self.des_aprox_button.pack(pady=10)
 
         # Parametros
-        self.problem_df = pd.read_excel("data.xlsx", skiprows=1)
+        self.problem_df = pd.read_csv("213530 (221258).csv", delimiter=';')
+        self.problem_df.columns = self.problem_df.columns.str.strip()
+        self.problem_df = self.problem_df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
         self.problem_list: List[Problem] = []
         self.population: List[Member] = []
@@ -204,6 +219,8 @@ class GeneticAlgorithm(ctk.CTk):
 
     def pode(self):
         self.sort()
+        print([i["fitness_err"] for i in self.population[0: 5]])
+        print([i["fitness_err"] for i in self.population[0: -5]])
         self.population = self.population[:self.population_size]
 
     def collect_data(self):
@@ -238,9 +255,9 @@ class GeneticAlgorithm(ctk.CTk):
 
         print("complete video")
 
-        pop_ev_animation.save("pop_ev.gif", writer=PillowWriter(fps=2))
-        des_aprox_animation.save("des_aprox.gif", writer=PillowWriter(fps=2))
-        members_animation.save("members.gif", writer=PillowWriter(fps=2))
+        pop_ev_animation.save("pop_ev.gif", writer=PillowWriter(fps=1))
+        des_aprox_animation.save("des_aprox.gif", writer=PillowWriter(fps=1))
+        members_animation.save("members.gif", writer=PillowWriter(fps=1))
 
     def population_evo_update(self, frame):
         self.ax_pop_ev.clear()
@@ -260,13 +277,19 @@ class GeneticAlgorithm(ctk.CTk):
     def y_des_and_aproximate_update(self, frame):
         self.ax_des_apro.clear()
 
-        self.ax_des_apro.title.set_text("Y Desired and Aproximate")
-        self.ax_des_apro.set_xlabel("member")
-        self.ax_des_apro.set_ylabel("Y")
+        self.ax_des_apro.set_title("Y Desired and Aproximate")
+        self.ax_des_apro.set_xlabel("Sample ID")
+        self.ax_des_apro.set_ylabel("Y Value")
 
-        self.ax_des_apro.plot([i for i in range(len(self.y_values))], self.y_values, label="Y Desired")
+        self.ax_des_apro.plot([], [], linestyle='-', color='blue', label="Y Desired")
+        self.ax_des_apro.plot([], [], linestyle='--', color='orange', label="Y Aproximate")
+
+        self.ax_des_apro.plot([i for i in range(len(self.y_values))], self.y_values, linestyle='-', color='blue')
         self.ax_des_apro.plot([i for i in range(len(self.y_values))], self.best_members[frame]["y_calc"],
-                              label="Y Aproximate")
+                              linestyle='--', color='orange')
+
+        # Mostrar leyendas
+        self.ax_des_apro.legend()
 
     def members_update(self, frame):
         self.ax_members.clear()
@@ -293,13 +316,79 @@ class GeneticAlgorithm(ctk.CTk):
 
         self.ax_members.legend(labels=["A", "B", "C", "D", "E"])
 
+    def save_final_population_evolution(self):
+        fig_pop_ev = plt.figure(figsize=(10, 10))
+        ax_pop_ev = fig_pop_ev.add_subplot(111)
+
+        ax_pop_ev.title.set_text("Population Evolution")
+        ax_pop_ev.set_xlabel("Generation")
+        ax_pop_ev.set_ylabel("Fitness Error")
+
+        ax_pop_ev.plot([i for i in range(len(self.best_members))],
+                       [m["fitness_err"] for m in self.best_members], label="Best members")
+        ax_pop_ev.plot([i for i in range(len(self.best_members))], self.median_values,
+                       label="Median values")
+        ax_pop_ev.plot([i for i in range(len(self.best_members))],
+                       [m["fitness_err"] for m in self.worst_members], label="Worst members")
+        ax_pop_ev.legend(labels=["Best members", "mean", "Worst members"])
+
+        fig_pop_ev.savefig("final_population_evolution.png")
+        plt.close(fig_pop_ev)
+
+    def save_final_y_desired_and_approximate(self):
+        fig_des_aprox = plt.figure(figsize=(10, 10))
+        ax_des_apro = fig_des_aprox.add_subplot(111)
+
+        ax_des_apro.set_title("Y Desired and Approximate")
+        ax_des_apro.set_xlabel("Sample ID")
+        ax_des_apro.set_ylabel("Y Value")
+
+        ax_des_apro.plot([i for i in range(len(self.y_values))], self.y_values, linestyle='-', color='blue',
+                         label="Y Desired")
+        ax_des_apro.plot([i for i in range(len(self.y_values))], self.best_members[-1]["y_calc"], linestyle='--',
+                         color='orange', label="Y Approximate")
+
+        ax_des_apro.legend()
+
+        fig_des_aprox.savefig("final_y_desired_and_approximate.png")
+        plt.close(fig_des_aprox)
+
+    def save_final_members(self):
+        fig_members = plt.figure(figsize=(10, 10))
+        ax_members = fig_members.add_subplot(111)
+
+        ax_members.title.set_text("Members")
+        ax_members.set_xlabel("Member")
+        ax_members.set_ylabel("Chromosome values")
+
+        # A
+        ax_members.plot([i for i in range(len(self.best_members))],
+                        [m["chromosome"][0] for m in self.best_members], label="A")
+        # B
+        ax_members.plot([i for i in range(len(self.best_members))],
+                        [m["chromosome"][1] for m in self.best_members], label="B")
+        # C
+        ax_members.plot([i for i in range(len(self.best_members))],
+                        [m["chromosome"][2] for m in self.best_members], label="C")
+        # D
+        ax_members.plot([i for i in range(len(self.best_members))],
+                        [m["chromosome"][3] for m in self.best_members], label="D")
+        # E
+        ax_members.plot([i for i in range(len(self.best_members))],
+                        [m["chromosome"][4] for m in self.best_members], label="E")
+
+        ax_members.legend(labels=["A", "B", "C", "D", "E"])
+
+        fig_members.savefig("final_members.png")
+        plt.close(fig_members)
+
     def run(self):
         self.initization()
         self.evalutatioon()
         self.sort()
 
         gen = 0
-        while gen < self.number_of_generations:
+        while gen < 200:
             self.crossover()
             self.mutation()
             self.evalutatioon()
@@ -313,6 +402,10 @@ class GeneticAlgorithm(ctk.CTk):
             print("\n best member error norm: ")
             print(self.population[0]["fitness_err"])
         self.make_video()
+
+        self.save_final_population_evolution()
+        self.save_final_y_desired_and_approximate()
+        self.save_final_members()
 
     def extract_values(self, df: pd.DataFrame):
         x_values = self.problem_df[['x1', 'x2', 'x3', 'x4']].values.tolist()
